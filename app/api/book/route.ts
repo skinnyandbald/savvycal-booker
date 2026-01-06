@@ -15,6 +15,7 @@ interface BookingRequest {
   attendee_name: string
   attendee_email: string
   time_zone?: string
+  guests?: string[]
 }
 
 function extractErrorMessage(responseText: string, defaultMessage: string): string {
@@ -75,6 +76,21 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   const startDate = new Date(start_at)
   const endDate = new Date(startDate.getTime() + validDuration * 60 * 1000)
 
+  // Build event payload
+  const eventPayload: Record<string, unknown> = {
+    start_at: startDate.toISOString(),
+    end_at: endDate.toISOString(),
+    duration: validDuration,
+    time_zone: body.time_zone || 'America/New_York',
+    email: attendee_email,
+    display_name: attendee_name,
+  }
+
+  // Add guests if provided (SavvyCal uses invitee_emails)
+  if (body.guests && body.guests.length > 0) {
+    eventPayload.invitee_emails = body.guests
+  }
+
   // Create event via SavvyCal API
   const response = await fetch(`https://api.savvycal.com/v1/links/${link_id}/events`, {
     method: 'POST',
@@ -82,14 +98,7 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
       'Authorization': `Bearer ${SAVVYCAL_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      start_at: startDate.toISOString(),
-      end_at: endDate.toISOString(),
-      duration: validDuration,
-      time_zone: body.time_zone || 'America/New_York',
-      email: attendee_email,
-      display_name: attendee_name,
-    }),
+    body: JSON.stringify(eventPayload),
   })
 
   const responseText = await response.text()
@@ -138,6 +147,24 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
 
   const duration = body.duration || 30
 
+  // Build booking payload
+  const bookingPayload: Record<string, unknown> = {
+    start: start_at,
+    eventTypeSlug: event_slug,
+    username: username,
+    attendee: {
+      name: attendee_name,
+      email: attendee_email,
+      timeZone: time_zone || 'America/New_York',
+    },
+    lengthInMinutes: duration,
+  }
+
+  // Add guests if provided (Cal.com uses guests array)
+  if (body.guests && body.guests.length > 0) {
+    bookingPayload.guests = body.guests
+  }
+
   // Create booking via Cal.com API v2
   const response = await fetch('https://api.cal.com/v2/bookings', {
     method: 'POST',
@@ -146,17 +173,7 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
       'cal-api-version': '2024-08-13',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      start: start_at,
-      eventTypeSlug: event_slug,
-      username: username,
-      attendee: {
-        name: attendee_name,
-        email: attendee_email,
-        timeZone: time_zone || 'America/New_York',
-      },
-      lengthInMinutes: duration,
-    }),
+    body: JSON.stringify(bookingPayload),
   })
 
   const responseText = await response.text()
