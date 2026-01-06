@@ -160,7 +160,7 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
     lengthInMinutes: duration,
     // Include common required booking fields - Cal.com event types often require these
     bookingFieldsResponses: {
-      title: `Meeting with ${attendee_name}`,
+      title: `Ben <> ${attendee_name} meeting`,
       notes: '',
     },
   }
