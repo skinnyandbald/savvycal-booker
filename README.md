@@ -1,6 +1,8 @@
 # SavvyCal-Booker
 
-A lightweight one-click booking page that works with both **SavvyCal** and **Cal.com**. Recipients can book a meeting with a single click—no calendar picker needed.
+A lightweight booking page that works with both **SavvyCal** and **Cal.com**. Click a time slot link → form opens with that time pre-filled → enter name/email → submit → booked.
+
+**Why this exists:** Neither SavvyCal nor Cal.com support pre-selecting a specific time via URL. Without this app, clicking a time link takes the recipient to your calendar page where they have to find and click the slot again.
 
 **Part of the [Propose Times](https://github.com/skinnyandbald/propose-times) system** — this handles the booking form, the Raycast extension generates the meeting time messages.
 
