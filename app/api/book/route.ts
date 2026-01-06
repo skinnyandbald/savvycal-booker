@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { link_id, start_at, duration, attendee_name, attendee_email } = body
+    const { link_id, start_at, attendee_name, attendee_email } = body
 
     if (!link_id || !start_at || !attendee_name || !attendee_email) {
       return NextResponse.json(
@@ -21,9 +21,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Calculate end time based on duration
+    // Fetch the link to get its default duration
+    const linkResponse = await fetch(`https://api.savvycal.com/v1/links/${link_id}`, {
+      headers: {
+        'Authorization': `Bearer ${SAVVYCAL_TOKEN}`,
+      },
+    })
+
+    if (!linkResponse.ok) {
+      console.log('Failed to fetch link:', linkResponse.status)
+      return NextResponse.json({ error: 'Failed to fetch link details' }, { status: 500 })
+    }
+
+    const linkData = await linkResponse.json()
+    console.log('Link data:', JSON.stringify(linkData, null, 2))
+
+    // Get a valid duration - must be one of the link's configured durations
+    let validDuration = body.duration || linkData.default_duration
+    if (linkData.durations && linkData.durations.length > 0) {
+      if (!linkData.durations.includes(validDuration)) {
+        console.log(`Duration ${validDuration} not in available durations:`, linkData.durations)
+        validDuration = linkData.default_duration || linkData.durations[0]
+      }
+    }
+
+    console.log('Using duration:', validDuration)
+
     const startDate = new Date(start_at)
-    const endDate = new Date(startDate.getTime() + (duration || 30) * 60 * 1000)
 
     // Create event via SavvyCal API
     const response = await fetch(`https://api.savvycal.com/v1/links/${link_id}/events`, {
@@ -34,7 +58,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         start_at: startDate.toISOString(),
-        end_at: endDate.toISOString(),
+        duration: validDuration,
         time_zone: body.time_zone || 'America/New_York',
         email: attendee_email,
         display_name: attendee_name,
