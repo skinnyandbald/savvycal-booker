@@ -4,13 +4,23 @@ import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
+type Provider = 'savvycal' | 'calcom'
+
 function BookingForm() {
   const searchParams = useSearchParams()
+
+  // Common params
+  const provider: Provider = searchParams.get('provider') === 'calcom' ? 'calcom' : 'savvycal'
   const slot = searchParams.get('slot') // ISO timestamp
-  const linkId = searchParams.get('link_id') // SavvyCal link ID
   const duration = searchParams.get('duration') || '30'
   const tz = searchParams.get('tz') || 'America/New_York'
-  const hostName = searchParams.get('host') || 'Host'
+
+  // SavvyCal params
+  const linkId = searchParams.get('link_id')
+
+  // Cal.com params
+  const calcomUsername = searchParams.get('username')
+  const calcomEventSlug = searchParams.get('event_slug')
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -18,18 +28,27 @@ function BookingForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  if (!slot || !linkId) {
+  // Validate required params based on provider
+  const isSavvyCal = provider === 'savvycal'
+  const isCalCom = provider === 'calcom'
+
+  const missingParams = !slot || (isSavvyCal && !linkId) || (isCalCom && (!calcomUsername || !calcomEventSlug))
+
+  if (missingParams) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
           <h1 style={styles.title}>Missing Parameters</h1>
-          <p style={{ color: '#666' }}>Required: slot, link_id</p>
+          <p style={{ color: '#666' }}>
+            {isSavvyCal && 'Required: slot, link_id'}
+            {isCalCom && 'Required: slot, username, event_slug'}
+          </p>
         </div>
       </div>
     )
   }
 
-  const slotDate = new Date(slot)
+  const slotDate = new Date(slot!)
   const endDate = new Date(slotDate.getTime() + parseInt(duration) * 60 * 1000)
 
   const formattedDate = slotDate.toLocaleDateString('en-US', {
@@ -64,17 +83,27 @@ function BookingForm() {
     setError('')
 
     try {
+      // Build request body based on provider
+      const requestBody: Record<string, unknown> = {
+        provider,
+        start_at: slot,
+        duration: parseInt(duration),
+        attendee_name: name,
+        attendee_email: email,
+        time_zone: tz,
+      }
+
+      if (isSavvyCal) {
+        requestBody.link_id = linkId
+      } else if (isCalCom) {
+        requestBody.username = calcomUsername
+        requestBody.event_slug = calcomEventSlug
+      }
+
       const res = await fetch('/api/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          link_id: linkId,
-          start_at: slot,
-          duration: parseInt(duration),
-          attendee_name: name,
-          attendee_email: email,
-          time_zone: tz,
-        })
+        body: JSON.stringify(requestBody)
       })
 
       const data = await res.json()
@@ -91,12 +120,17 @@ function BookingForm() {
     }
   }
 
+  // Provider-specific colors
+  const accentColor = isCalCom ? '#292929' : '#ec4899'
+  const buttonBgColor = isCalCom ? '#f0f0f0' : '#fce7f3'
+  const buttonTextColor = isCalCom ? '#292929' : '#be185d'
+
   if (success) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
           <div style={styles.successHeader}>
-            <div style={styles.successIcon}>
+            <div style={{ ...styles.successIcon }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
@@ -130,7 +164,7 @@ function BookingForm() {
       <div style={styles.card}>
         <div style={styles.header}>
           <div style={styles.headerLeft}>
-            <div style={styles.pinkCircle}>
+            <div style={{ ...styles.pinkCircle, backgroundColor: accentColor }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -210,6 +244,8 @@ function BookingForm() {
               disabled={loading}
               style={{
                 ...styles.scheduleButton,
+                backgroundColor: buttonBgColor,
+                color: buttonTextColor,
                 opacity: loading ? 0.7 : 1
               }}
             >
@@ -270,6 +306,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  title: {
+    margin: 0,
+    fontSize: '18px',
+    fontWeight: 600,
+    color: '#111',
   },
   confirmTitle: {
     margin: 0,
