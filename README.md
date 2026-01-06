@@ -44,12 +44,12 @@ This app provides a simple booking form at `/book` that accepts URL parameters. 
 ### Example URLs
 
 **SavvyCal:**
-```
+```text
 https://your-app.vercel.app/book?slot=2024-01-15T14:00:00Z&link_id=link_abc123&duration=25&tz=America/New_York
 ```
 
 **Cal.com:**
-```
+```text
 https://your-app.vercel.app/book?provider=calcom&slot=2024-01-15T14:00:00Z&username=skinnyandbald&event_slug=pow-wow&duration=30&tz=America/New_York
 ```
 
