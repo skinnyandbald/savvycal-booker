@@ -10,7 +10,7 @@ function BookingForm() {
   const linkId = searchParams.get('link_id') // SavvyCal link ID
   const duration = searchParams.get('duration') || '30'
   const tz = searchParams.get('tz') || 'America/New_York'
-  const hostName = searchParams.get('host') || 'Ben Fisher'
+  const hostName = searchParams.get('host') || 'Host'
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
