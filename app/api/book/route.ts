@@ -166,12 +166,11 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
     )
   }
 
-  const duration = body.duration || 30
-
   // Fetch host name for meeting title
   const hostName = await getCalComHostName(CALCOM_API_KEY)
 
-  // Build booking payload
+  // Build booking payload - don't send lengthInMinutes, let Cal.com use the event type's default
+  // (event types have specific allowed durations that we don't know without fetching the event type)
   const bookingPayload: Record<string, unknown> = {
     start: start_at,
     eventTypeSlug: event_slug,
@@ -181,7 +180,6 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
       email: attendee_email,
       timeZone: time_zone || 'America/New_York',
     },
-    lengthInMinutes: duration,
     // Include common required booking fields - Cal.com event types often require these
     bookingFieldsResponses: {
       title: `${hostName} <> ${attendee_name} meeting`,
