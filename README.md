@@ -1,4 +1,4 @@
-# SavvyBooker
+# SavvyCal-Booker
 
 A lightweight one-click booking page that works with both **SavvyCal** and **Cal.com**. Recipients can book a meeting with a single click—no calendar picker needed.
 
