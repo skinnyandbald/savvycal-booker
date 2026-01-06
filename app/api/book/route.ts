@@ -125,6 +125,27 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   })
 }
 
+// Fetch Cal.com host name from /v2/me endpoint
+async function getCalComHostName(apiKey: string): Promise<string> {
+  try {
+    const response = await fetch('https://api.cal.com/v2/me', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'cal-api-version': '2024-08-13',
+      },
+    })
+    if (response.ok) {
+      const data = await response.json()
+      // Handle both { user: { name } } and { data: { name } } formats
+      const user = data.user || data.data || data
+      return user.name || user.username || 'Host'
+    }
+  } catch (err) {
+    console.error('Failed to fetch Cal.com host name:', err)
+  }
+  return 'Host'
+}
+
 // Cal.com booking handler
 async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
   const CALCOM_API_KEY = process.env.CALCOM_API_KEY
@@ -147,6 +168,9 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
 
   const duration = body.duration || 30
 
+  // Fetch host name for meeting title
+  const hostName = await getCalComHostName(CALCOM_API_KEY)
+
   // Build booking payload
   const bookingPayload: Record<string, unknown> = {
     start: start_at,
@@ -160,7 +184,7 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
     lengthInMinutes: duration,
     // Include common required booking fields - Cal.com event types often require these
     bookingFieldsResponses: {
-      title: `Ben <> ${attendee_name} meeting`,
+      title: `${hostName} <> ${attendee_name} meeting`,
       notes: '',
     },
   }
