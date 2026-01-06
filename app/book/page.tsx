@@ -10,7 +10,7 @@ function BookingForm() {
   const searchParams = useSearchParams()
 
   // Common params
-  const provider = (searchParams.get('provider') || 'savvycal') as Provider
+  const provider: Provider = searchParams.get('provider') === 'calcom' ? 'calcom' : 'savvycal'
   const slot = searchParams.get('slot') // ISO timestamp
   const duration = searchParams.get('duration') || '30'
   const tz = searchParams.get('tz') || 'America/New_York'

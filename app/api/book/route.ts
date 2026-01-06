@@ -17,6 +17,15 @@ interface BookingRequest {
   time_zone?: string
 }
 
+function extractErrorMessage(responseText: string, defaultMessage: string): string {
+  try {
+    const errorData = JSON.parse(responseText)
+    return errorData.message || errorData.error || defaultMessage
+  } catch {
+    return responseText || defaultMessage
+  }
+}
+
 // SavvyCal booking handler
 async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   const SAVVYCAL_TOKEN = process.env.SAVVYCAL_TOKEN
@@ -50,7 +59,7 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   }
 
   const linkData = await linkResponse.json()
-  console.log('Link data:', JSON.stringify(linkData, null, 2))
+  console.log('Link data fetched successfully')
 
   // Get a valid duration - must be one of the link's configured durations
   let validDuration = body.duration || linkData.default_duration
@@ -84,20 +93,19 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   })
 
   const responseText = await response.text()
-  console.log('SavvyCal create event response:', response.status, responseText)
+  console.log('SavvyCal create event response:', response.status)
 
   if (!response.ok) {
-    let errorMessage = 'Failed to create booking'
-    try {
-      const errorData = JSON.parse(responseText)
-      errorMessage = errorData.message || errorData.error || errorMessage
-    } catch {
-      errorMessage = responseText || errorMessage
-    }
+    const errorMessage = extractErrorMessage(responseText, 'Failed to create booking')
     return NextResponse.json({ error: errorMessage }, { status: response.status })
   }
 
-  const event = JSON.parse(responseText)
+  let event
+  try {
+    event = JSON.parse(responseText)
+  } catch {
+    return NextResponse.json({ error: 'Invalid response from SavvyCal' }, { status: 502 })
+  }
 
   return NextResponse.json({
     success: true,
@@ -152,20 +160,19 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
   })
 
   const responseText = await response.text()
-  console.log('Cal.com create booking response:', response.status, responseText)
+  console.log('Cal.com create booking response:', response.status)
 
   if (!response.ok) {
-    let errorMessage = 'Failed to create booking'
-    try {
-      const errorData = JSON.parse(responseText)
-      errorMessage = errorData.message || errorData.error || errorMessage
-    } catch {
-      errorMessage = responseText || errorMessage
-    }
+    const errorMessage = extractErrorMessage(responseText, 'Failed to create booking')
     return NextResponse.json({ error: errorMessage }, { status: response.status })
   }
 
-  const data = JSON.parse(responseText)
+  let data
+  try {
+    data = JSON.parse(responseText)
+  } catch {
+    return NextResponse.json({ error: 'Invalid response from Cal.com' }, { status: 502 })
+  }
   const booking = data.data || data
 
   return NextResponse.json({
