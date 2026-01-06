@@ -185,6 +185,11 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
       title: `${hostName} <> ${attendee_name} meeting`,
       notes: '',
     },
+    // Explicitly request Zoom video conferencing
+    // This tells Cal.com to generate a Zoom meeting link
+    location: {
+      type: 'integrations:zoom',
+    },
   }
 
   // Add guests if provided (Cal.com uses guests array)
