@@ -73,6 +73,7 @@ function BookingForm() {
           duration: parseInt(duration),
           attendee_name: name,
           attendee_email: email,
+          time_zone: tz,
         })
       })
 

@@ -35,13 +35,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         start_at: startDate.toISOString(),
         end_at: endDate.toISOString(),
-        attendees: [
-          {
-            email: attendee_email,
-            name: attendee_name,
-            is_organizer: false,
-          }
-        ],
+        time_zone: body.time_zone || 'America/New_York',
+        email: attendee_email,
+        display_name: attendee_name,
       }),
     })
 
