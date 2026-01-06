@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
@@ -149,6 +149,36 @@ function BookingForm() {
   const accentColor = isCalCom ? '#292929' : '#ec4899'
   const buttonBgColor = isCalCom ? '#f0f0f0' : '#fce7f3'
   const buttonTextColor = isCalCom ? '#292929' : '#be185d'
+  const buttonHoverBgColor = isCalCom ? '#e0e0e0' : '#fbcfe8'
+
+  // Cmd+Enter to submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault()
+        const form = document.querySelector('form')
+        if (form) {
+          form.requestSubmit()
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Inject hover styles
+  const hoverStyles = `
+    .schedule-btn {
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+    .schedule-btn:hover:not(:disabled) {
+      background-color: ${buttonHoverBgColor} !important;
+      transform: translateY(-1px);
+    }
+    .schedule-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  `
 
   if (success) {
     return (
@@ -186,6 +216,7 @@ function BookingForm() {
 
   return (
     <div style={styles.container}>
+      <style>{hoverStyles}</style>
       <div style={styles.card}>
         <div style={styles.header}>
           <div style={styles.headerLeft}>
@@ -290,6 +321,7 @@ function BookingForm() {
             <button
               type="submit"
               disabled={loading}
+              className="schedule-btn"
               style={{
                 ...styles.scheduleButton,
                 backgroundColor: buttonBgColor,
