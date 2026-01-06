@@ -30,13 +30,25 @@ This app provides a simple booking form at `/book` that accepts URL parameters:
 https://your-app.vercel.app/book?slot=2024-01-15T14:00:00Z&link_id=link_abc123&duration=25&tz=America/New_York
 ```
 
-## Use with Propose Times
+## Use with Propose Times (Raycast Extension)
 
-This app is designed to work with the [Propose Times](https://github.com/skinnyandbald/propose-times) Raycast extension:
+This app is the backend for the [Propose Times](https://github.com/skinnyandbald/propose-times) Raycast extension. The extension generates the meeting time messages; this app handles the one-click booking.
 
-1. Deploy this app to Vercel
-2. In the Raycast extension preferences, set **Booker URL** to your Vercel deployment URL
-3. Generated meeting time links will now point to this one-click booking form
+### Full Setup
+
+1. **Deploy this app** using the button above
+2. **Install the Raycast extension:**
+   ```bash
+   git clone https://github.com/skinnyandbald/propose-times.git
+   cd propose-times
+   npm install
+   npm run build
+   ```
+   Then in Raycast: **Preferences → Extensions → + → Import Extension** → select the folder
+
+3. **Connect them:** In Raycast extension preferences, set **Booker URL** to your Vercel deployment URL (e.g., `https://your-app.vercel.app`)
+
+Now when you generate meeting times, each slot links directly to this booking form.
 
 ## Local Development
 
