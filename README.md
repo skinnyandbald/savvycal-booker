@@ -4,6 +4,18 @@ A lightweight one-click booking page that works with both **SavvyCal** and **Cal
 
 **Part of the [Propose Times](https://github.com/skinnyandbald/propose-times) system** — this handles the booking form, the Raycast extension generates the meeting time messages.
 
+## What You'll Need
+
+**Vercel account** — A hosting service that runs this small web app. Deploying is as simple as clicking a button.
+- 💰 **Free** — The free tier handles plenty of bookings
+- 🔗 [Sign up for Vercel](https://vercel.com/signup) (you can use your GitHub account)
+
+**A scheduling account** — Either one:
+- [SavvyCal](https://savvycal.com) — Starts at $12/month
+- [Cal.com](https://cal.com) — Free tier available
+
+---
+
 ## Deploy Your Own
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fskinnyandbald%2Fsavvycal-booker&env=SAVVYCAL_TOKEN,CALCOM_API_KEY&envDescription=API%20tokens%20for%20your%20calendar%20providers&envLink=https%3A%2F%2Fsavvycal.com%2Fsettings%2Fintegrations)
