@@ -158,6 +158,11 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
       timeZone: time_zone || 'America/New_York',
     },
     lengthInMinutes: duration,
+    // Include common required booking fields - Cal.com event types often require these
+    bookingFieldsResponses: {
+      title: `Meeting with ${attendee_name}`,
+      notes: '',
+    },
   }
 
   // Add guests if provided (Cal.com uses guests array)
