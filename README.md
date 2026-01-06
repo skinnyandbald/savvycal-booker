@@ -2,6 +2,8 @@
 
 A lightweight one-click booking page for SavvyCal. Recipients can book a meeting with a single click—no calendar picker needed.
 
+**Part of the [Propose Times](https://github.com/skinnyandbald/propose-times) system** — this handles the booking form, the Raycast extension generates the meeting time messages.
+
 ## Deploy Your Own
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fskinnyandbald%2Fsavvycal-booker&env=SAVVYCAL_TOKEN&envDescription=Your%20SavvyCal%20Personal%20Access%20Token&envLink=https%3A%2F%2Fsavvycal.com%2Fsettings%2Fintegrations)
