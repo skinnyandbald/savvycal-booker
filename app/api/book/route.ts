@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     console.log('Using duration:', validDuration)
 
     const startDate = new Date(start_at)
+    const endDate = new Date(startDate.getTime() + validDuration * 60 * 1000)
 
     // Create event via SavvyCal API
     const response = await fetch(`https://api.savvycal.com/v1/links/${link_id}/events`, {
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         start_at: startDate.toISOString(),
+        end_at: endDate.toISOString(),
         duration: validDuration,
         time_zone: body.time_zone || 'America/New_York',
         email: attendee_email,
