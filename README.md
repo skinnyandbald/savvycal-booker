@@ -6,6 +6,9 @@ A lightweight booking page that works with both **SavvyCal** and **Cal.com**. Cl
 
 **Part of the [Propose Times](https://github.com/skinnyandbald/propose-times) system** — the Raycast extension intelligently generates meeting times (batched around existing meetings, respecting your scheduling preferences), and this app handles the one-click booking.
 
+<img width="847" height="526" alt="Frame 5" src="https://github.com/user-attachments/assets/b9629698-7d2b-41e0-bd3b-e8fd180c5a74" />
+
+
 ## What You'll Need
 
 **Vercel account** — A hosting service that runs this small web app. Deploying is as simple as clicking a button.
