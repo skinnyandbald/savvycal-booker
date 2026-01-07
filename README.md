@@ -4,7 +4,7 @@ A lightweight booking page that works with both **SavvyCal** and **Cal.com**. Cl
 
 **Why this exists:** Neither SavvyCal nor Cal.com support pre-selecting a specific time via URL. Without this app, clicking a time link takes the recipient to your calendar page where they have to find and click the slot again.
 
-**Part of the [Propose Times](https://github.com/skinnyandbald/propose-times) system** — this handles the booking form, the Raycast extension generates the meeting time messages.
+**Part of the [Propose Times](https://github.com/skinnyandbald/propose-times) system** — the Raycast extension intelligently generates meeting times (batched around existing meetings, respecting your scheduling preferences), and this app handles the one-click booking.
 
 ## What You'll Need
 
