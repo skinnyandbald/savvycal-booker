@@ -43,16 +43,14 @@ function BookingForm() {
   }, [altSlotsParam, initialSlot])
 
   // Track selected slot (defaults to the one from URL)
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0)
-
-  // Find the index of the initial slot in availableSlots
-  useEffect(() => {
-    if (initialSlot && availableSlots.length > 0) {
-      const initialTime = new Date(initialSlot).getTime()
-      const idx = availableSlots.findIndex((s) => s.getTime() === initialTime)
-      if (idx !== -1) setSelectedSlotIndex(idx)
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState(() => {
+    if (!initialSlot || availableSlots.length === 0) {
+      return 0
     }
-  }, [initialSlot, availableSlots])
+    const initialTime = new Date(initialSlot).getTime()
+    const idx = availableSlots.findIndex((s) => s.getTime() === initialTime)
+    return idx !== -1 ? idx : 0
+  })
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -69,7 +67,7 @@ function BookingForm() {
   const isSavvyCal = provider === 'savvycal'
   const isCalCom = provider === 'calcom'
 
-  const missingParams = !initialSlot || (isSavvyCal && !linkId) || (isCalCom && (!calcomUsername || !calcomEventSlug))
+  const missingParams = availableSlots.length === 0 || (isSavvyCal && !linkId) || (isCalCom && (!calcomUsername || !calcomEventSlug))
 
   if (missingParams) {
     return (
@@ -77,8 +75,8 @@ function BookingForm() {
         <div style={styles.card}>
           <h1 style={styles.title}>Missing Parameters</h1>
           <p style={{ color: '#666' }}>
-            {isSavvyCal && 'Required: slot, link_id'}
-            {isCalCom && 'Required: slot, username, event_slug'}
+            {isSavvyCal && 'Required: slot or alt_slots, link_id'}
+            {isCalCom && 'Required: slot or alt_slots, username, event_slug'}
           </p>
         </div>
       </div>
