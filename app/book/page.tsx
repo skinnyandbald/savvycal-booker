@@ -77,8 +77,6 @@ function BookingForm() {
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [guests, setGuests] = useState<string[]>([])
-  const [showGuestInput, setShowGuestInput] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -119,34 +117,12 @@ function BookingForm() {
 
   const { startTime: formattedStartTime, endTime: formattedEndTime, tzAbbr } = formatTimeRange(slotDate, durationMinutes, tz)
 
-  const addGuest = () => {
-    setGuests([...guests, ''])
-    setShowGuestInput(true)
-  }
-
-  const updateGuest = (index: number, value: string) => {
-    const newGuests = [...guests]
-    newGuests[index] = value
-    setGuests(newGuests)
-  }
-
-  const removeGuest = (index: number) => {
-    const newGuests = guests.filter((_, i) => i !== index)
-    setGuests(newGuests)
-    if (newGuests.length === 0) {
-      setShowGuestInput(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      // Filter out empty guest emails
-      const validGuests = guests.filter(g => g.trim() !== '')
-
       // Build request body based on provider
       const requestBody: Record<string, unknown> = {
         provider,
@@ -155,7 +131,6 @@ function BookingForm() {
         attendee_name: name,
         attendee_email: email,
         time_zone: tz,
-        guests: validGuests,
       }
 
       if (isSavvyCal) {
@@ -339,39 +314,6 @@ function BookingForm() {
             />
           </div>
 
-          {showGuestInput && guests.map((guest, index) => (
-            <div key={index} style={styles.guestRow}>
-              <input
-                type="email"
-                value={guest}
-                onChange={(e) => updateGuest(index, e.target.value)}
-                placeholder="guest@example.com"
-                style={styles.guestInput}
-              />
-              <button
-                type="button"
-                onClick={() => removeGuest(index)}
-                style={styles.removeGuestButton}
-                aria-label="Remove guest"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-          ))}
-
-          <button type="button" onClick={addGuest} style={styles.addGuestButton}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="8.5" cy="7" r="4"></circle>
-              <line x1="20" y1="8" x2="20" y2="14"></line>
-              <line x1="23" y1="11" x2="17" y2="11"></line>
-            </svg>
-            <span>{guests.length > 0 ? 'Add another guest' : 'Add a guest'}</span>
-          </button>
-
           {error && <div style={styles.error}>{error}</div>}
 
           <div style={styles.footer}>
@@ -546,46 +488,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#be185d',
     fontSize: '15px',
     fontWeight: 600,
-    cursor: 'pointer',
-  },
-  addGuestButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 16px',
-    borderRadius: '20px',
-    border: '1px solid #e5e7eb',
-    backgroundColor: 'white',
-    fontSize: '14px',
-    color: '#374151',
-    cursor: 'pointer',
-    marginBottom: '16px',
-  },
-  guestRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '12px',
-  },
-  guestInput: {
-    flex: 1,
-    padding: '12px 14px',
-    borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    fontSize: '15px',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-  },
-  removeGuestButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    border: 'none',
-    backgroundColor: '#f3f4f6',
-    color: '#6b7280',
     cursor: 'pointer',
   },
   error: {
