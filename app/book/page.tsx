@@ -1,19 +1,30 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
 type Provider = 'savvycal' | 'calcom'
+
+// Parse alternative slots from comma-separated unix timestamps
+function parseAltSlots(altSlotsParam: string | null): Date[] {
+  if (!altSlotsParam) return []
+  return altSlotsParam
+    .split(',')
+    .map((ts) => new Date(parseInt(ts, 10) * 1000))
+    .filter((d) => !isNaN(d.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime())
+}
 
 function BookingForm() {
   const searchParams = useSearchParams()
 
   // Common params
   const provider: Provider = searchParams.get('provider') === 'calcom' ? 'calcom' : 'savvycal'
-  const slot = searchParams.get('slot') // ISO timestamp
+  const initialSlot = searchParams.get('slot') // ISO timestamp
   const duration = searchParams.get('duration') || '30'
   const tz = searchParams.get('tz') || 'America/New_York'
+  const altSlotsParam = searchParams.get('alt_slots')
 
   // SavvyCal params
   const linkId = searchParams.get('link_id')
@@ -21,6 +32,27 @@ function BookingForm() {
   // Cal.com params
   const calcomUsername = searchParams.get('username')
   const calcomEventSlug = searchParams.get('event_slug')
+
+  // Parse alternative slots for dropdown
+  const availableSlots = useMemo(() => {
+    const altSlots = parseAltSlots(altSlotsParam)
+    // If we have alt_slots, use them; otherwise just use the initial slot
+    if (altSlots.length > 0) return altSlots
+    if (initialSlot) return [new Date(initialSlot)]
+    return []
+  }, [altSlotsParam, initialSlot])
+
+  // Track selected slot (defaults to the one from URL)
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0)
+
+  // Find the index of the initial slot in availableSlots
+  useEffect(() => {
+    if (initialSlot && availableSlots.length > 0) {
+      const initialTime = new Date(initialSlot).getTime()
+      const idx = availableSlots.findIndex((s) => s.getTime() === initialTime)
+      if (idx !== -1) setSelectedSlotIndex(idx)
+    }
+  }, [initialSlot, availableSlots])
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -30,11 +62,14 @@ function BookingForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
+  // Current selected slot
+  const slot = availableSlots[selectedSlotIndex]?.toISOString() || initialSlot
+
   // Validate required params based on provider
   const isSavvyCal = provider === 'savvycal'
   const isCalCom = provider === 'calcom'
 
-  const missingParams = !slot || (isSavvyCal && !linkId) || (isCalCom && (!calcomUsername || !calcomEventSlug))
+  const missingParams = !initialSlot || (isSavvyCal && !linkId) || (isCalCom && (!calcomUsername || !calcomEventSlug))
 
   if (missingParams) {
     return (
@@ -253,9 +288,36 @@ function BookingForm() {
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={styles.dateText}>{formattedDate}</div>
-            <div style={styles.timeText}>{formattedStartTime} – {formattedEndTime} ({tzAbbr})</div>
+            {availableSlots.length > 1 ? (
+              <select
+                value={selectedSlotIndex}
+                onChange={(e) => setSelectedSlotIndex(parseInt(e.target.value, 10))}
+                style={styles.timeSelect}
+              >
+                {availableSlots.map((slotOption, idx) => {
+                  const startTime = slotOption.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZone: tz
+                  }).toLowerCase()
+                  const endTime = new Date(slotOption.getTime() + parseInt(duration) * 60 * 1000)
+                    .toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      timeZone: tz
+                    }).toLowerCase()
+                  return (
+                    <option key={idx} value={idx}>
+                      {startTime} – {endTime}
+                    </option>
+                  )
+                })}
+              </select>
+            ) : (
+              <div style={styles.timeText}>{formattedStartTime} – {formattedEndTime} ({tzAbbr})</div>
+            )}
           </div>
         </div>
 
@@ -434,6 +496,24 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '15px',
     color: '#111',
     marginTop: '2px',
+  },
+  timeSelect: {
+    fontSize: '15px',
+    color: '#111',
+    marginTop: '4px',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    backgroundColor: 'white',
+    width: '100%',
+    cursor: 'pointer',
+    outline: 'none',
+    appearance: 'none' as const,
+    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+    backgroundPosition: 'right 10px center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '20px',
+    paddingRight: '36px',
   },
   form: {
     marginTop: '8px',
