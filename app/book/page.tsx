@@ -310,7 +310,7 @@ function BookingForm() {
                     }).toLowerCase()
                   return (
                     <option key={idx} value={idx}>
-                      {startTime} – {endTime}
+                      {startTime} – {endTime} ({tzAbbr})
                     </option>
                   )
                 })}
