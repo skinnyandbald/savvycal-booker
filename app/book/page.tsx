@@ -16,6 +16,29 @@ function parseAltSlots(altSlotsParam: string | null): Date[] {
     .sort((a, b) => a.getTime() - b.getTime())
 }
 
+// Format a time range with start time, end time, and timezone abbreviation
+function formatTimeRange(startDate: Date, durationMinutes: number, timezone: string): { startTime: string, endTime: string, tzAbbr: string } {
+  const startTime = startDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: timezone
+  }).toLowerCase()
+
+  const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000)
+  const endTime = endDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: timezone
+  }).toLowerCase()
+
+  const tzAbbr = startDate.toLocaleTimeString('en-US', {
+    timeZone: timezone,
+    timeZoneName: 'short'
+  }).split(' ').pop() || timezone
+
+  return { startTime, endTime, tzAbbr }
+}
+
 function BookingForm() {
   const searchParams = useSearchParams()
 
@@ -84,7 +107,7 @@ function BookingForm() {
   }
 
   const slotDate = new Date(slot!)
-  const endDate = new Date(slotDate.getTime() + parseInt(duration) * 60 * 1000)
+  const durationMinutes = parseInt(duration)
 
   const formattedDate = slotDate.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -94,23 +117,7 @@ function BookingForm() {
     timeZone: tz
   })
 
-  const formattedStartTime = slotDate.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: tz
-  }).toLowerCase()
-
-  const formattedEndTime = endDate.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: tz
-  }).toLowerCase()
-
-  // Get timezone abbreviation
-  const tzAbbr = slotDate.toLocaleTimeString('en-US', {
-    timeZone: tz,
-    timeZoneName: 'short'
-  }).split(' ').pop()
+  const { startTime: formattedStartTime, endTime: formattedEndTime, tzAbbr } = formatTimeRange(slotDate, durationMinutes, tz)
 
   const addGuest = () => {
     setGuests([...guests, ''])
@@ -295,17 +302,7 @@ function BookingForm() {
                 style={styles.timeSelect}
               >
                 {availableSlots.map((slotOption, idx) => {
-                  const startTime = slotOption.toLocaleTimeString('en-US', {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    timeZone: tz
-                  }).toLowerCase()
-                  const endTime = new Date(slotOption.getTime() + parseInt(duration) * 60 * 1000)
-                    .toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      timeZone: tz
-                    }).toLowerCase()
+                  const { startTime, endTime } = formatTimeRange(slotOption, durationMinutes, tz)
                   return (
                     <option key={idx} value={idx}>
                       {startTime} – {endTime} ({tzAbbr})
