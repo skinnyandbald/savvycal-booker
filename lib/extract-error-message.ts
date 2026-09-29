@@ -35,7 +35,7 @@ export function extractErrorMessage(responseText: string, defaultMessage: string
   try {
     errorData = JSON.parse(responseText)
   } catch {
-    return responseText || defaultMessage
+    return str(responseText) ?? defaultMessage
   }
   if (typeof errorData === 'string') return str(errorData) ?? defaultMessage
   if (!errorData || typeof errorData !== 'object') return defaultMessage

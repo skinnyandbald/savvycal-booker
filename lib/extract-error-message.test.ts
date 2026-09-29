@@ -64,3 +64,7 @@ test('skips blank string values in errors object', () => {
   assert.equal(extractErrorMessage('{"errors":{"detail":""}}', DEFAULT), DEFAULT)
   assert.equal(extractErrorMessage('{"errors":{"start_at":" "}}', DEFAULT), DEFAULT)
 })
+
+test('falls back to default for whitespace-only non-JSON body', () => {
+  assert.equal(extractErrorMessage('   ', DEFAULT), DEFAULT)
+})

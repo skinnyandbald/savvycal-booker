@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { extractErrorMessage } from '@/lib/extract-error-message'
+import { redact } from '@/lib/redact'
 
 type Provider = 'savvycal' | 'calcom'
 
@@ -92,7 +93,11 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   console.log('SavvyCal create event response:', response.status)
 
   if (!response.ok) {
-    console.error('SavvyCal error body:', response.status, responseText.slice(0, 2000))
+    console.error(
+      'SavvyCal error body:',
+      response.status,
+      redact(responseText, [attendee_name, attendee_email]).slice(0, 2000)
+    )
     const errorMessage = extractErrorMessage(responseText, 'Failed to create booking')
     return NextResponse.json({ error: errorMessage }, { status: response.status })
   }
