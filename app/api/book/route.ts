@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { extractErrorMessage } from '@/lib/extract-error-message'
+import { redact } from '@/lib/redact'
 
 type Provider = 'savvycal' | 'calcom'
 
@@ -15,15 +17,6 @@ interface BookingRequest {
   attendee_name: string
   attendee_email: string
   time_zone?: string
-}
-
-function extractErrorMessage(responseText: string, defaultMessage: string): string {
-  try {
-    const errorData = JSON.parse(responseText)
-    return errorData.message || errorData.error || defaultMessage
-  } catch {
-    return responseText || defaultMessage
-  }
 }
 
 // SavvyCal booking handler
@@ -100,6 +93,11 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   console.log('SavvyCal create event response:', response.status)
 
   if (!response.ok) {
+    console.error(
+      'SavvyCal error body:',
+      response.status,
+      redact(responseText, [attendee_name, attendee_email]).slice(0, 2000)
+    )
     const errorMessage = extractErrorMessage(responseText, 'Failed to create booking')
     return NextResponse.json({ error: errorMessage }, { status: response.status })
   }
@@ -202,19 +200,7 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
 
   if (!response.ok) {
     // Cal.com v2 API returns errors in format: { status: "error", error: { code: "...", message: "..." } }
-    let errorMessage = 'Failed to create booking'
-    try {
-      const errorData = JSON.parse(responseText)
-      if (errorData.error?.message) {
-        errorMessage = errorData.error.message
-      } else if (errorData.message) {
-        errorMessage = errorData.message
-      } else if (typeof errorData.error === 'string') {
-        errorMessage = errorData.error
-      }
-    } catch {
-      errorMessage = responseText || 'Failed to create booking'
-    }
+    const errorMessage = extractErrorMessage(responseText, 'Failed to create booking')
     return NextResponse.json({ error: errorMessage }, { status: response.status })
   }
 

@@ -105,6 +105,8 @@ cp .env.example .env.local
 npm run dev
 ```
 
+Run tests with `npm test` (requires Node 22.18+ for native TypeScript support).
+
 ## Tech Stack
 
 - Next.js 16 (App Router)
