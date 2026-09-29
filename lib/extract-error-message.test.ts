@@ -68,3 +68,8 @@ test('skips blank string values in errors object', () => {
 test('falls back to default for whitespace-only non-JSON body', () => {
   assert.equal(extractErrorMessage('   ', DEFAULT), DEFAULT)
 })
+
+test('handles Cal.com v2 error shape', () => {
+  const body = JSON.stringify({ status: 'error', error: { code: 'BadRequestException', message: 'User is not available' } })
+  assert.equal(extractErrorMessage(body, DEFAULT), 'User is not available')
+})

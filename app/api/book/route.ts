@@ -200,19 +200,7 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
 
   if (!response.ok) {
     // Cal.com v2 API returns errors in format: { status: "error", error: { code: "...", message: "..." } }
-    let errorMessage = 'Failed to create booking'
-    try {
-      const errorData = JSON.parse(responseText)
-      if (errorData.error?.message) {
-        errorMessage = errorData.error.message
-      } else if (errorData.message) {
-        errorMessage = errorData.message
-      } else if (typeof errorData.error === 'string') {
-        errorMessage = errorData.error
-      }
-    } catch {
-      errorMessage = responseText || 'Failed to create booking'
-    }
+    const errorMessage = extractErrorMessage(responseText, 'Failed to create booking')
     return NextResponse.json({ error: errorMessage }, { status: response.status })
   }
 
