@@ -59,3 +59,8 @@ test('handles non-object JSON bodies', () => {
   assert.equal(extractErrorMessage('5', DEFAULT), DEFAULT)
   assert.equal(extractErrorMessage('"Slot taken"', DEFAULT), 'Slot taken')
 })
+
+test('skips blank string values in errors object', () => {
+  assert.equal(extractErrorMessage('{"errors":{"detail":""}}', DEFAULT), DEFAULT)
+  assert.equal(extractErrorMessage('{"errors":{"start_at":" "}}', DEFAULT), DEFAULT)
+})

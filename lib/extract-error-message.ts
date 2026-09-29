@@ -8,28 +8,26 @@ function itemMessage(item: unknown): string | undefined {
   return str(item) ?? str((item as { message?: unknown } | null)?.message)
 }
 
+function itemMessages(items: unknown[]): string[] {
+  return items.map(itemMessage).filter((m): m is string => m !== undefined)
+}
+
 // Flatten a validation `errors` payload into a readable string.
 // Handles { field: ['msg', ...] }, { field: 'msg' }, and ['msg' | { message }] shapes.
 function formatErrors(errors: unknown): string | undefined {
   if (typeof errors === 'string') return str(errors)
+  let parts: string[] = []
   if (Array.isArray(errors)) {
-    const parts = errors.map(itemMessage).filter((m): m is string => m !== undefined)
-    return parts.length > 0 ? parts.join('; ') : undefined
-  }
-  if (errors && typeof errors === 'object') {
-    const parts = Object.entries(errors).flatMap(([field, value]) => {
-      if (Array.isArray(value)) {
-        return value
-          .map(itemMessage)
-          .filter((m): m is string => m !== undefined)
-          .map((msg) => `${field} ${msg}`)
-      }
-      if (typeof value === 'string') return field === 'detail' ? [value] : [`${field} ${value}`]
-      return []
+    parts = itemMessages(errors)
+  } else if (errors && typeof errors === 'object') {
+    parts = Object.entries(errors).flatMap(([field, value]) => {
+      if (Array.isArray(value)) return itemMessages(value).map((msg) => `${field} ${msg}`)
+      const msg = str(value)
+      if (msg === undefined) return []
+      return field === 'detail' ? [msg] : [`${field} ${msg}`]
     })
-    return parts.length > 0 ? parts.join('; ') : undefined
   }
-  return undefined
+  return parts.length > 0 ? parts.join('; ') : undefined
 }
 
 export function extractErrorMessage(responseText: string, defaultMessage: string): string {
@@ -43,11 +41,5 @@ export function extractErrorMessage(responseText: string, defaultMessage: string
   if (!errorData || typeof errorData !== 'object') return defaultMessage
 
   const data = errorData as { message?: unknown; error?: unknown; errors?: unknown }
-  return (
-    str(data.message) ??
-    str(data.error) ??
-    str((data.error as { message?: unknown } | null)?.message) ??
-    formatErrors(data.errors) ??
-    defaultMessage
-  )
+  return str(data.message) ?? itemMessage(data.error) ?? formatErrors(data.errors) ?? defaultMessage
 }
