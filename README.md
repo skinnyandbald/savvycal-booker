@@ -80,7 +80,7 @@ https://your-app.vercel.app/book?provider=calcom&slot=2024-01-15T14:00:00Z&usern
 | `CALCOM_ALLOWED_USERNAMES` | Cal.com `username` values that can be booked |
 | `CALCOM_ALLOWED_EVENT_SLUGS` | Cal.com `event_slug` values that can be booked |
 
-When unset or empty, any well-formed value (letters, numbers, `_` and `-`) is accepted. Requests for values not in a non-empty list are rejected with a 400.
+When unset or empty, any value 1–100 characters long containing only letters, numbers, `_` and `-` is accepted. Requests for values not in a non-empty list are rejected with a 400.
 
 ## Use with Propose Times (Raycast Extension)
 
