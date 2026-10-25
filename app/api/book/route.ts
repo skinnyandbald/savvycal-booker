@@ -248,7 +248,15 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: BookingRequest = await request.json()
+    let body: BookingRequest
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
     const { provider = 'savvycal', start_at, attendee_name, attendee_email } = body
 
     // Validate common required fields
