@@ -17,6 +17,14 @@ test('escapes regex characters in submitted values', () => {
   assert.equal(redact('aXb', ['a.b']), 'aXb')
 })
 
+test('redacts JSON-escaped forms of submitted values', () => {
+  const name = 'Jane "JJ" O\\Neil'
+  const body = JSON.stringify({ error: `${name} is invalid` })
+  assert.equal(redact(body, [name]), '{"error":"[redacted] is invalid"}')
+  assert.equal(redact('{"error":"Zo\\u00eb is invalid"}', ['Zoë']), '{"error":"[redacted] is invalid"}')
+  assert.equal(redact('{"error":"Zoë is invalid"}', ['Zoë']), '{"error":"[redacted] is invalid"}')
+})
+
 test('ignores blank values and leaves safe text intact', () => {
   assert.equal(redact('start_at is not available', ['', '  ']), 'start_at is not available')
 })
