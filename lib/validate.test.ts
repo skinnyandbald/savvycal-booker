@@ -47,8 +47,22 @@ test('isName', () => {
 test('isIsoTimestamp', () => {
   assert.equal(isIsoTimestamp('2024-01-15T14:00:00Z'), true)
   assert.equal(isIsoTimestamp('2024-01-15T14:00:00.000-05:00'), true)
+  assert.equal(isIsoTimestamp('2024-01-15T14:00:00+05:30'), true)
+  assert.equal(isIsoTimestamp('2024-01-15T14:00:00-0500'), true)
+  assert.equal(isIsoTimestamp(`2024-01-15T14:00:00.${'0'.repeat(19)}Z`), true)
   for (const value of ['garbage', '', `2024-01-15T14:00:00Z${' '.repeat(30)}`, 1705327200000, null]) {
     assert.equal(isIsoTimestamp(value), false, String(value))
+  }
+  for (const value of [
+    '2024-01-15',
+    '2024-01-15T14:00:00',
+    '2024-01-15T14:00:00.000',
+    '2024-01-15T14:00:00+05',
+    '2024-01-15T14:00:00+25:00',
+    'garbageZ',
+    `2024-01-15T14:00:00.${'0'.repeat(20)}Z`,
+  ]) {
+    assert.equal(isIsoTimestamp(value), false, value)
   }
 })
 
