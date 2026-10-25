@@ -70,6 +70,18 @@ https://your-app.vercel.app/book?slot=2024-01-15T14:00:00Z&link_id=link_abc123&d
 https://your-app.vercel.app/book?provider=calcom&slot=2024-01-15T14:00:00Z&username=skinnyandbald&event_slug=pow-wow&duration=30&tz=America/New_York
 ```
 
+## Security
+
+`/api/book` books meetings using your own `SAVVYCAL_TOKEN` / `CALCOM_API_KEY`, and the link ID, username, and event slug come from the request. For public deployments, restrict them with these optional comma-separated environment variables:
+
+| Variable | Restricts |
+|----------|-----------|
+| `SAVVYCAL_ALLOWED_LINK_IDS` | SavvyCal `link_id` values that can be booked |
+| `CALCOM_ALLOWED_USERNAMES` | Cal.com `username` values that can be booked |
+| `CALCOM_ALLOWED_EVENT_SLUGS` | Cal.com `event_slug` values that can be booked |
+
+When unset or empty, any value 1–100 characters long containing only letters, numbers, `_` and `-` is accepted. Requests for values not in a non-empty list are rejected with a 400.
+
 ## Use with Propose Times (Raycast Extension)
 
 This app is the backend for the [Propose Times](https://github.com/skinnyandbald/propose-times) Raycast extension. The extension generates the meeting time messages; this app handles the one-click booking.
