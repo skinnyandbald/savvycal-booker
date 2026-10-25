@@ -16,7 +16,7 @@ export function isName(value: unknown): value is string {
 
 export function isIsoTimestamp(value: unknown): value is string {
   return typeof value === 'string' && value.length <= 40 &&
-    /(?:Z|[+-]\d{2}:?\d{2})$/.test(value) && !Number.isNaN(Date.parse(value))
+    /(?:[Zz]|[+-]\d{2}:?\d{2})$/.test(value) && !Number.isNaN(Date.parse(value))
 }
 
 // Duration in minutes: an integer between 1 and 1440 (one day).

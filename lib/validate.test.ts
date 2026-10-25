@@ -46,6 +46,7 @@ test('isName', () => {
 
 test('isIsoTimestamp', () => {
   assert.equal(isIsoTimestamp('2024-01-15T14:00:00Z'), true)
+  assert.equal(isIsoTimestamp('2024-01-15T14:00:00z'), true)
   assert.equal(isIsoTimestamp('2024-01-15T14:00:00.000-05:00'), true)
   assert.equal(isIsoTimestamp('2024-01-15T14:00:00+05:30'), true)
   assert.equal(isIsoTimestamp('2024-01-15T14:00:00-0500'), true)
