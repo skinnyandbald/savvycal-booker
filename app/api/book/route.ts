@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { extractErrorMessage } from '@/lib/extract-error-message'
 import { redact } from '@/lib/redact'
+import {
+  isAllowed,
+  isDuration,
+  isEmail,
+  isIsoTimestamp,
+  isName,
+  isSafeSegment,
+  isTimeZone,
+} from '@/lib/validate'
 
 type Provider = 'savvycal' | 'calcom'
 
@@ -39,8 +48,12 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
     )
   }
 
+  if (!isSafeSegment(link_id) || !isAllowed(link_id, process.env.SAVVYCAL_ALLOWED_LINK_IDS)) {
+    return NextResponse.json({ error: 'Invalid link_id' }, { status: 400 })
+  }
+
   // Fetch the link to get its default duration
-  const linkResponse = await fetch(`https://api.savvycal.com/v1/links/${link_id}`, {
+  const linkResponse = await fetch(`https://api.savvycal.com/v1/links/${encodeURIComponent(link_id)}`, {
     headers: {
       'Authorization': `Bearer ${SAVVYCAL_TOKEN}`,
     },
@@ -80,7 +93,7 @@ async function bookSavvyCal(body: BookingRequest): Promise<NextResponse> {
   }
 
   // Create event via SavvyCal API
-  const response = await fetch(`https://api.savvycal.com/v1/links/${link_id}/events`, {
+  const response = await fetch(`https://api.savvycal.com/v1/links/${encodeURIComponent(link_id)}/events`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${SAVVYCAL_TOKEN}`,
@@ -159,6 +172,15 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
     )
   }
 
+  if (
+    !isSafeSegment(username) ||
+    !isSafeSegment(event_slug) ||
+    !isAllowed(username, process.env.CALCOM_ALLOWED_USERNAMES) ||
+    !isAllowed(event_slug, process.env.CALCOM_ALLOWED_EVENT_SLUGS)
+  ) {
+    return NextResponse.json({ error: 'Invalid username or event_slug' }, { status: 400 })
+  }
+
   // Fetch host name for meeting title
   const hostName = await getCalComHostName(CALCOM_API_KEY)
 
@@ -195,10 +217,13 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
 
   const responseText = await response.text()
   console.log('Cal.com create booking response:', response.status)
-  console.log('Cal.com response body:', responseText)
-  console.log('Cal.com request payload:', JSON.stringify(bookingPayload, null, 2))
 
   if (!response.ok) {
+    console.error(
+      'Cal.com error body:',
+      response.status,
+      redact(responseText, [attendee_name, attendee_email]).slice(0, 2000)
+    )
     // Cal.com v2 API returns errors in format: { status: "error", error: { code: "...", message: "..." } }
     const errorMessage = extractErrorMessage(responseText, 'Failed to create booking')
     return NextResponse.json({ error: errorMessage }, { status: response.status })
@@ -223,7 +248,15 @@ async function bookCalCom(body: BookingRequest): Promise<NextResponse> {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: BookingRequest = await request.json()
+    let body: BookingRequest
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
     const { provider = 'savvycal', start_at, attendee_name, attendee_email } = body
 
     // Validate common required fields
@@ -234,6 +267,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (provider !== 'savvycal' && provider !== 'calcom') {
+      return NextResponse.json({ error: "Invalid provider: must be 'savvycal' or 'calcom'" }, { status: 400 })
+    }
+    if (!isIsoTimestamp(start_at)) {
+      return NextResponse.json({ error: 'Invalid start_at: must be an ISO timestamp' }, { status: 400 })
+    }
+    if (!isName(attendee_name)) {
+      return NextResponse.json({ error: 'Invalid attendee_name' }, { status: 400 })
+    }
+    if (!isEmail(attendee_email)) {
+      return NextResponse.json({ error: 'Invalid attendee_email' }, { status: 400 })
+    }
+    // != null: the page sends parseInt(), and NaN serializes to null
+    if (body.duration != null && !isDuration(body.duration)) {
+      return NextResponse.json({ error: 'Invalid duration: must be an integer from 1 to 1440' }, { status: 400 })
+    }
+    if (body.time_zone != null && !isTimeZone(body.time_zone)) {
+      return NextResponse.json({ error: 'Invalid time_zone' }, { status: 400 })
+    }
+
     // Route to appropriate provider
     if (provider === 'calcom') {
       return await bookCalCom(body)
@@ -241,10 +294,7 @@ export async function POST(request: NextRequest) {
       return await bookSavvyCal(body)
     }
   } catch (err) {
-    console.error('Booking error:', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('Booking error:', err instanceof Error ? err.name : typeof err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
